@@ -8,8 +8,16 @@ import { DB_NAME } from "./contants.js";
 import express from "express";
 import connectDB from "./db/index.js";
 
-connectDB();
 
+connectDB()
+  .then(() => {
+    app.listen(process.env.PORT || 5000, () => {
+      console.log(`Server started on PORT ${process.env.PORT || 5000}`);
+    });
+  })
+  .catch((err) => {
+    console.log("MongoDB connection error:", err);
+  });
 /*
 const app = express();
 dotenv.config();

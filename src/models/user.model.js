@@ -1,7 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { use } from "react";
 
 const userSchema = new Schema(
   {
@@ -89,4 +88,5 @@ userSchema.methods.generateRefreshToken = function () {
     }
   );
 };
-export const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

@@ -42,7 +42,7 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
-      select: false, // Exclude password field when querying
+      select: false, // keep hidden by default
       trim: true,
     },
     refreshToken: {
@@ -52,16 +52,20 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+// Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
-userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password);
+
+// Compare password
+userSchema.methods.isPasswordCorrect = async function (enteredPassword) {
+  // IMPORTANT: this.password must be available, so fetch user with .select("+password")
+  return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Generate JWT access token
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
@@ -70,13 +74,14 @@ userSchema.methods.generateAccessToken = function () {
       username: this.username,
       fullname: this.fullname,
     },
-
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d",
     }
   );
 };
+
+// Generate JWT refresh token
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
@@ -88,5 +93,6 @@ userSchema.methods.generateRefreshToken = function () {
     }
   );
 };
+
 const User = mongoose.model("User", userSchema);
 export default User;
